@@ -42,93 +42,97 @@
   - AMD-Vi for AMD (SVM)
   - Enable "IOMMU"
   - Disable "Above 4G Decoding"
+- This guide is created with the usage of another guide but merged into this with intentions of making it simplier.
 
-- Nested Virtualization for Intel:
-```shell
-sudo su
-echo "options kvm_intel nested=1" >> /etc/modprobe.d/kvm.conf
+### 2. Edit the bootloader and prerequisites 
+
+- Make sure your OS is updated: ```sudo dnf update``` afterward reboot (amd doesn't need the next command) and run ```sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda```  
+- Make sure you have a linux password set this will be VERY important for Putty
+- Run ```sudo dnf group install --withoptional virtualization```
+
+- in the terminal insert ```sudo vi /etc/default/grub```
+- Press A to start typing
+- Were going to be editing ```GRUB_CMDLINE_LINUX_DEFAULT```
+- Keep anything previously there (Change the "intel_iommu=on" to "amd_iommu=on" in the following text if you have an AMD cpu) Add at the end: ```resume=/dev/mapper/fedora_localhost--live-swap rd.lvm.lv=fedora_localhost-live/root rd.lvm.lv=fedora_localhost-live/swap intel_iommu=on quiet```
+- exit the vi prompt by pressing esc, and typing :wq
+- Update grub via ```sudo grub2-mkconfig -o /etc/grub2.cfg```  
+
+### 2.1 Libvirtd changes
+
+- ```sudo vi /etc/libvirt/libvirtd.conf``` or just go to the actual directory and use kwrite
+- remove the comment (the #) from the following: unix_sock_group = "libvirt" and unix_sock_rw_perms = "0770" (You can find these between line 80 and 105)
+- add this to the end of the file ```log_filters="3:qemu 1:libvirt"
+log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
+- Run ```sudo usermod -a -G kvm,libvirt $(whoami)``` in the terminal
+- Run ```sudo systemctl enable libvirtd``` and afterwards run ```sudo systemctl start libvirtd```
+- Run ```sudo groups $(whoami)``` and make sure your username appears, if it doesn't you did the steps wrong.
+- Example: ![image](https://github.com/user-attachments/assets/0f69d679-5c14-423a-b17c-8fb90a337c0e)
+
+
+### 2.2 Qemu chanes
+
+- ```sudo vi /etc/libvirt/qemu.conf``` or go to the directory and use kwrite
+- At lines 518 to 524 remove the # from ```user = "root"``` and ```group = "root"```
+- Replace the root with your username keeping the quotation marks.
+- Example: ![image](https://github.com/user-attachments/assets/cf6dbbd3-b7e1-417f-9391-9ab2419a7a6e)
+- after you change ```root``` with your username, run ```sudo systemctl restart libvirtd```
+- run ```sudo virsh net-autostart default```
+- Download Stable virtio-win ISO from https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md
+- Download W10 iso https://www.microsoft.com/en-us/software-download/windows10ISO
+
+# 2.3 VM Setup
+
+- Create the vm, add the w10 iso.
+- Uncheck the automatically detect box and change it to windows 10 (this is to make sure that the vm is called w10)
+- Set the storage to 200 gb | Set the Memory to whatever you want (I use half) and CPU will be changed later
+- Check "Customize configuration before install" and click finish
+- Now the important stuff
+- Set the chipset to Q35 and Firmware to UEFI
+- Check your cpu info via google or ```lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'```
+- I set mine to 8 cores, 1 socket, and 1 thread.
+- Now go to disk drive, and set it to VirIO and click advanced options > Cache Mode > Write back > change the serial to whatever nika uses, at this time it is "B4NN3D53R14L" > apply
+- Go to boot options > check SATA CDROM 1 > put it to the top of priority > apply
+- Add hardware > (It should already be on storage) > device type > change to "CDROM device" > Be sure the bus type is SATA > Finish
+
+# Windows Setup
+
+- After you accept the terms and service click "Custom: install windows only (advanced)"
+- load driver > ok > ```E:\amd64\w10\viostor.inf``` > next (it will load for a bit) > it should show your storage drive just click next
+- Just go thorugh the w10 installation like normal
+- (OPTIONAL) when you get to the point of signing into or creating a microsoft account click "create an account", disconnect yourself from the wifi > click the back arrow > and you can just name yourself and reconnnect to the wifi.
+- once you finish and get into the actual w10 just turn off the vm
+
+# Script installation
+
+- Run ```git clone https://gitlab.com/risingprismtv/single-gpu-passthrough.git``` 
+- Either CD into the folder or go into the folder and right click somewhere in a blank space and open terminal
+- Run ```sudo chmod +x install_hooks.sh``` then run ```sudo ./install_hooks.sh```
+- (Optional) Verify the files: 
+- in /etc/systemd/system/ there should be "libvirt-nosleep@.service"
+- in /usr/local/bin/ there should be vfio-startup and vfio-teardown
+- in /etc/libvirt/hooks/ there should be "qemu"
+
+# Attaching the GPU
+
+- Remove ```Display spice``` and remove ```Video QXL``` (If it is grey remove the other one first)
+
+- Run 
 ```
-
-- Nested Virtualization for AMD:
-```shell
-sudo su
-echo "options kvm_amd nested=1" >> /etc/modprobe.d/kvm.conf
+#!/bin/bash
+shopt -s nullglob
+for g in /sys/kernel/iommu_groups/*; do
+    echo "IOMMU Group ${g##*/}:"
+    for d in $g/devices/*; do
+        echo -e "\t$(lspci -nns ${d##*/})"
+    done;
+done;
 ```
+- One of the groups should contain your gpu (DO NOT ADD BRIDGES)
+Example: ![image](https://github.com/user-attachments/assets/e78ebe2d-e975-408f-b44d-4f6e09a20769)
+- So in that example you would add 07:00.0 and 07:00.1 you would NOT add the Host bridge nor PCI bridge.
+- Now add hardware > PCI Host Device > and add whatever your gpu device id is
 
-- Preload `vfio-pci` module so it can bind to PCI IDs:
-```shell
-sudo su
-echo "softdep nvidia pre: vfio-pci" >> /etc/modprobe.d/kvm.conf
-echo "softdep nouveau pre: vfio-pci" >> /etc/modprobe.d/kvm.conf
-```
-
-- Update initramfs:
-```shell
-<Fedora> sudo dracut --force
-<Debian> sudo update-initramfs -c -k $(uname -r)
-```
-
-
-  <details>
-    <summary>Install on <b>Fedora Linux (Fedora Spins 41 KDE)</b>:</summary>
-
-    sudo dnf install @virtualization
-  </details>
-
-  
-  <details>
-    <summary>Install on <b>Debian Linux (Debian 12 KDE)</b>:</summary>
-
-    sudo apt-get update
-    sudo apt install virt-manager
-  </details>
-
-### 1.1. Configure libvirt
-
-- Edit `/etc/libvirt/qemu.conf` and uncomment (needed for **audio**):
-```shell
-#user = "libvirt-qemu"
-user = "1000"
-```
-
-- Edit `/etc/libvirt/libvirtd.conf` and uncomment:
-```shell
-unix_sock_group = "libvirt"
-unix_sock_rw_perms = "0770"
-```
-
-- Join **libvirt group** and enable **libvirt daemon**:
-```shell
-test $UID = 0 && exit
-sudo usermod -aG libvirt $USER
-sudo systemctl enable libvirtd.service
-```
-
-- Restart Linux PC.
-
-- Start default virtual network:
-```shell
-sudo virsh net-autostart default
-sudo virsh net-start default
-```
-
-- **Enable XML editing** in Virtual Machine Manager >> Edit >> Preferences >> General
-
-- Download "Stable virtio-win ISO" from:
-https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md
-
-### 2. New VM set up in QEMU/KVM
-
-- Virtual Machine Manager >> File >> New Virtual Machine
-
-- Local install media (ISO image or CDROM) >> `Windows10.iso` >> Choose Memory and CPU settings >> **Disable** storage for this virtual machine >> Customize configuration before install
-
-  - Overview >> Chipset: Q35, **Firmware**: OVMF_CODE_4M.secboot >> Apply
-  - [Add Hardware] >> Storage >> Device type: CDROM device >> Manage... `virtio-win.iso` >> [Finish]
-  - [Add Hardware] >> Storage >> Device type: Disk device >> Bus type: VirtIO >> Create a disk image for the virtual machine: 200 GiB >> Advanced options >> Serial: B4NN3D53R14L >> [Finish]
-  - [Begin Installation] >> Virtual Machine >> Shut Down >> Force Off
-
-### 2.1 Configure VM
+### Configure VM XML
 
 - Virtual Machine Manager >> [Open] >> View >> Details >> Overview >> XML
 
@@ -192,7 +196,7 @@ https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md
   <features>
     <acpi/>
     <apic/>
-    <hyperv mode="passthrough">
+    <hyperv mode="custom">
       <relaxed state="on"/>
       <vapic state="on"/>
       <spinlocks state="on" retries="8191"/>
@@ -258,103 +262,7 @@ https://github.com/virtio-win/virtio-win-pkg-scripts/blob/master/README.md
   ```
   </details>
 
-
-- Replace `<audio id="1" type="spice"/>` and [Apply]:
-  <details>
-    <summary>Spoiler <b>(for pipewire sound, not required)</b></summary>
-
-  ```shell
-  <audio id="1" type="pipewire" runtimeDir="/run/user/1000">
-    <input name="qemuinput"/>
-    <output name="qemuoutput"/>
-  </audio>
-  ```
-  </details>
-
-### 2.2 Install Windows
-
-- Where do you want to install Windows?
-  - Load driver >> OK >> `E:\amd64\w10\viostor.inf`
-
-- Virtual Machine Manager >> [Open] >> View >> Details >> Boot Options >> Boot device order:
-  * [x] VirtIO Disk 1 >> [Apply]
-
-### 3. VFIO GPU passthrough (on Linux PC)
-
-- Find GPU location with: `lspci -v | grep -i VGA`
-```shell
-00:02.0 VGA compatible controller: Intel Corporation HD Graphics 530 (rev 06) (prog-if 00 [VGA controller])
-02:00.0 VGA compatible controller: NVIDIA Corporation TU106 [GeForce RTX 2070] (rev a1) (prog-if 00 [VGA controller])
-```
-
-- GeForce RTX 2070 has 4 PCI IDs: `lspci -v | grep -i NVIDIA`
-```shell
-02:00.0 VGA compatible controller: NVIDIA Corporation TU106 [GeForce RTX 2070] (rev a1) (prog-if 00 [VGA controller])
-        Subsystem: NVIDIA Corporation TU106 [GeForce RTX 2070]
-02:00.1 Audio device: NVIDIA Corporation TU106 High Definition Audio Controller (rev a1)
-        Subsystem: NVIDIA Corporation Device 1f02
-02:00.2 USB controller: NVIDIA Corporation TU106 USB 3.1 Host Controller (rev a1) (prog-if 30 [XHCI])
-        Subsystem: NVIDIA Corporation Device 1f02
-02:00.3 Serial bus controller: NVIDIA Corporation TU106 USB Type-C UCSI Controller (rev a1)
-        Subsystem: NVIDIA Corporation Device 1f02
-```
-
-- Find PCI IDs with: `lspci -n -s 02:00`
-```shell
-02:00.0 0300: 10de:1f02 (rev a1)
-02:00.1 0403: 10de:10f9 (rev a1)
-02:00.2 0c03: 10de:1ada (rev a1)
-02:00.3 0c80: 10de:1adb (rev a1)
-```
-
-- Edit `/etc/default/grub`, use either **intel_iommu=on** or **amd_iommu=on**:
-```shell
-GRUB_CMDLINE_LINUX="module_blacklist=nvidia,nouveau vfio-pci.ids=10de:1f02,10de:10f9,10de:1ada,10de:1adb intel_iommu=on iommu=pt"
-```
-
-- Update GRUB and restart Linux PC:
-```shell
-<Fedora> sudo grub2-mkconfig -o /boot/grub2/grub.cfg
-<Debian> sudo grub-mkconfig -o /boot/grub/grub.cfg
-```
-
-- Inspect IOMMU enabled with:
-```shell
-if compgen -G "/sys/kernel/iommu_groups/*/devices/*" > /dev/null; then echo "IOMMU enabled."; fi
-```
-
-- Inspect kernel driver in use with: `lspci -k -s 02:00`
-```lua
-02:00.0 VGA compatible controller: NVIDIA Corporation TU106 [GeForce RTX 2070] (rev a1)
-        Subsystem: NVIDIA Corporation TU106 [GeForce RTX 2070]
-        Kernel driver in use: vfio-pci
-        Kernel modules: nouveau
-02:00.1 Audio device: NVIDIA Corporation TU106 High Definition Audio Controller (rev a1)
-        Subsystem: NVIDIA Corporation Device 1f02
-        Kernel driver in use: vfio-pci
-        Kernel modules: snd_hda_intel
-02:00.2 USB controller: NVIDIA Corporation TU106 USB 3.1 Host Controller (rev a1)
-        Subsystem: NVIDIA Corporation Device 1f02
-        Kernel driver in use: xhci_hcd
-02:00.3 Serial bus controller: NVIDIA Corporation TU106 USB Type-C UCSI Controller (rev a1)
-        Subsystem: NVIDIA Corporation Device 1f02
-        Kernel driver in use: vfio-pci
-        Kernel modules: i2c_nvidia_gpu
-```
-
-- Not loaded as a module, `xhci_hcd` will be managed by libvirt.
-
-### 3.1 Add passthrough GPU devices to Windows VM
-
-- Virtual Machine Manager >> [Open] >> View >> Details >> [Add Hardware] >> PCI Host Device:
-  - 02:00.0 NVIDIA Corporation TU106 [GeForce RTX 2070] >> **[Finish]**
-  - 02:00.1 NVIDIA Corporation TU106 High Definition Audio Controller >> **[Finish]**
-  - 02:00.2 NVIDIA Corporation TU106 USB 3.1 Host Controller >> **[Finish]**
-  - 02:00.3 NVIDIA Corporation TU106 USB Type-C UCSI Controller >> **[Finish]**
-
-- Install GPU drivers on Windows VM.
-
-### 4. Configure evdev passthrough (on Linux PC)
+### Configure evdev passthrough (on Linux PC)
 
 - Find your **mouse** and **keyboard** with:
 ```shell
@@ -396,12 +304,12 @@ cgroup_device_acl = [
 sudo systemctl restart libvirtd
 ```
 
-### 4.1 Configure VM
+### Configure VM
 
 - Virtual Machine Manager >> [Open] >> View >> Details >> Overview >> XML
 
 
-- Replace `</domain>` and [Apply]:
+- Replace `</domain>` (it should be at the bottom of the xml) and [Apply]:
   <details>
     <summary>Spoiler</summary>
 
@@ -437,64 +345,6 @@ sudo usermod -aG input $USER
   </details>
 
 - Restart Linux PC.
-
-### 5. Usage
-
-- For **window settings**, open; System Settings >> Window Management >> Window Rules >> Import... >> GLFW.kwinrule
-  - Also check; System Settings >> Display & Monitor >> Scale: 100%
-
-- Virtual Machine Manager >> [Open] >> View >> Details >> Video QXL >> Model: None >> [Apply]
-
-- You will be using video output from passthrough GPU instead of QXL virtual GPU.
-
-| Method                       | Latency   | ESP          | Cons                         |
-| ---------------------------- | --------- | ------------ | ---------------------------- |
-| Cable                        | 0 ms      | Glow         | Overlay on 2nd monitor       |
-| Capture card                 | 30-300 ms | Overlay+Glow | Investment for faster device |
-| Steam Remote Play            | 10 ms     | Overlay+Glow | Encoded video                |
-
-### 5.1 Cable
-
-- Plug monitor into passthrough GPU.
-
-### 5.2 Capture card
-
-- Plug capture card into passthrough GPU.
-
-- Open capture card raw feed with:
-```shell
-gst-launch-1.0 -v v4l2src device=/dev/video0 ! video/x-raw,width=1920,height=1080,framerate=60/1 ! videoconvert ! autovideosink
-```
-
-### 5.3 Steam Remote Play (if you can't connect)
-
-- Virtual Machine Manager >> [Open] >> View >> Details >> NIC xx:xx:xx >> Network source: Bridge device... >> Device name: br0 >> [Apply]
-
-- Find your active network interface with:
-```shell
-ip -br addr show
-
-lo               UNKNOWN        127.0.0.1/8
-eno1             DOWN           
-wlp10s0f3u1      UP             172.16.0.100/24
-```
-
-- Manually configure `br0` every reboot:
-```shell
-sudo ip link add name br0 type bridge
-sudo ip addr add 10.0.0.1/24 dev br0
-sudo ip link set dev br0 up
-sudo sysctl -w net.ipv4.ip_forward=1
-sudo iptables --table nat --append POSTROUTING --out-interface wlp10s0f3u1 -j MASQUERADE
-sudo iptables --insert FORWARD --in-interface br0 -j ACCEPT
-```
-
-- Windows VM static configuration (TCP/IPv4):
-  - IP address: 10.0.0.100
-  - Subnet mask: 255.255.255.0
-  - Default gateway: 10.0.0.1
-  - Preferred DNS server: 8.8.8.8
-  - Alternate DNS server: 9.9.9.9
 
 ### 6. Nika Read Only (on Linux PC)
 
@@ -550,6 +400,13 @@ https://github.com/memflow/memflow-kvm/releases
 ```shell
 sudo dkms install --archive=memflow-0.2.1-source-only.dkms.tar.gz
 ```
+
+- IMPORTANT AFTER EVERY REBOOT:
+- Run ```sudo setenforce 0```
+- Run ```sudo systemctl start sshd```
+- If you do not know your ip run ```ip addr```
+- It may be different for you but I can find mine in 2: enp5s0 (It should be purple)
+- Now install gpu drivers > install putty > connect to putty > open apex > run the command below
 
 - Run:
 ```shell
