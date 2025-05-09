@@ -46,6 +46,9 @@
 
 ### 2. Edit the bootloader and prerequisites 
 
+- I did this with Fedora 41 KDE, this should work with other distros too, if you come up with any issues on other distros try finding the command that accomplishes the same thing but for that distro or use chatgpt to do it.
+- you can find Fedora 41 KDE here: https://fedora.mirrorservice.org/fedora/linux/releases/41/Spins/x86_64/iso/Fedora-KDE-Live-x86_64-41-1.4.iso
+
 - Make sure your OS is updated: ```sudo dnf update``` afterward reboot (amd doesn't need the next command) and run ```sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda```  
 - Make sure you have a linux password set this will be VERY important for Putty
 - Run ```sudo dnf group install --withoptional virtualization```
