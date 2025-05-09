@@ -63,7 +63,7 @@
 ### 2.1 Libvirtd changes
 
 - ```sudo vi /etc/libvirt/libvirtd.conf``` or just go to the actual directory and use kwrite
-- remove the comment (the #) from the following: unix_sock_group = "libvirt" and unix_sock_rw_perms = "0770" (You can find these between line 80 and 105)
+- remove the comment (the #) from the following: ```unix_sock_group = "libvirt"``` and ```unix_sock_rw_perms = "0770"``` (You can find these between line 80 and 105)
 - add this to the end of the file ```log_filters="3:qemu 1:libvirt"
 log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
 - Run ```sudo usermod -a -G kvm,libvirt $(whoami)``` in the terminal
