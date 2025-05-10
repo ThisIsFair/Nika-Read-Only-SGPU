@@ -178,6 +178,7 @@ Example: ![image](https://github.com/user-attachments/assets/e78ebe2d-e975-408f-
   ```
   </details>
 
+- The following command may give you an error when you try to save it, the fix is changing the vcpu amount to the amount you put originally
 
 - Replace from `<memory unit="KiB">4194304</memory>` to `<vcpu placement="static">2</vcpu>` and [Apply]:
   <details>
@@ -417,6 +418,8 @@ sudo dkms install --archive=memflow-0.2.1-source-only.dkms.tar.gz
 - If you do not know your IP run `ip addr`  
 - It may be different for you but I can find mine in 2: enp5s0 (It should be purple)
 - Now install gpu drivers > install putty > connect to putty > open apex > run the command below
+- You may not have audio, the fix is adding your audio controller. 
+- Example: My audio device is called ```Audio device: Advanced Micro Devices, Inc. [AMD] Starship/Matisse HD Audio Controller``` which I just added as a PCI device and it fixed.
 
 - Run:
 ```shell
