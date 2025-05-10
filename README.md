@@ -362,6 +362,7 @@ chmod +x nika
 cd path/to/extracted/repository
 sudo -E ./nika
 ```
+- Open Nika.ini and change ```START_OVERLAY = YES``` to ```START_OVERLAY = NO```
 
 ### 7. Disable hypervisor (mandatory)
 
@@ -405,9 +406,15 @@ sudo dkms install --archive=memflow-0.2.1-source-only.dkms.tar.gz
 ```
 
 - IMPORTANT AFTER EVERY REBOOT:
-- Run ```sudo setenforce 0```
-- Run ```sudo systemctl start sshd```
-- If you do not know your ip run ```ip addr```
+<details>
+<summary>Do the Following after every reboot</summary>
+
+- Run `sudo setenforce 0`  
+- Run `sudo systemctl start sshd`  
+
+</details>
+
+- If you do not know your IP run `ip addr`  
 - It may be different for you but I can find mine in 2: enp5s0 (It should be purple)
 - Now install gpu drivers > install putty > connect to putty > open apex > run the command below
 
