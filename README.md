@@ -86,7 +86,7 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
 # 2.3 VM Setup
 
 - Create the vm, add the w10 iso.
-- Uncheck the automatically detect box and change it to windows 10 (this is to make sure that the vm is called w10)
+- Uncheck the automatically detect box and change it to windows 10 (this is to make sure that the vm is called win10)
 - Set the storage to 200 gb | Set the Memory to whatever you want (I use half) and CPU will be changed later
 - Check "Customize configuration before install" and click finish
 - Now the important stuff
@@ -114,6 +114,13 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
 - in /etc/systemd/system/ there should be "libvirt-nosleep@.service"
 - in /usr/local/bin/ there should be vfio-startup and vfio-teardown
 - in /etc/libvirt/hooks/ there should be "qemu"
+
+- AMD GPU'S Potential Fix below
+
+- Remove the files from the directory in "(Optional) Verify the files"
+- Run ```git clone https://gitlab.com/akshaycodes/vfio-script```
+- Open the terminal in the folder or cd into it
+- ```sudo bash vfio_script_install.sh```
 
 # Attaching the GPU
 
