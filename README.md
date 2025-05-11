@@ -436,3 +436,5 @@ sudo modprobe memflow
 cd path/to/extracted/repository
 sudo -E ./nika
 ```
+
+- If kvm does not get detected add tis to your grub line `ibt=off`(or try `no_cet` if that doesn't work)
