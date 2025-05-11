@@ -273,6 +273,8 @@ Example: ![image](https://github.com/user-attachments/assets/e78ebe2d-e975-408f-
   ```
   </details>
 
+- IMPORTANT: I am not really sure if this is a one case scenario, but if you have network issues on intel set aes to require
+
 ### Configure evdev passthrough (on Linux PC)
 
 - Find your **mouse** and **keyboard** with:
