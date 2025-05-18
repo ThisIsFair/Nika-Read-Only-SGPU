@@ -91,10 +91,10 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
 
 - Local install media (ISO image or CDROM) >> Windows10.iso >> Choose Memory and CPU settings >> Disable storage for this virtual machine >> Customize configuration before install
 
--- Overview >> Chipset: Q35, Firmware: OVMF_CODE_4M.secboot >> [Apply]
--- [Add Hardware] >> Storage >> Device type: CDROM device >> Manage... virtio-win.iso >> [Finish]
--- [Add Hardware] >> Storage >> Device type: Disk device >> Bus type: SCSI >> Create a disk image for the virtual machine: 200 GiB >> Advanced options >> Serial: B4NN3D53R14L >> [Finish]
--- [Begin Installation] >> Virtual Machine >> Shut Down >> Force Off
+  - Overview >> Chipset: Q35, **Firmware**: OVMF_CODE_4M.secboot >> [Apply]
+  - [Add Hardware] >> Storage >> Device type: CDROM device >> Manage... `virtio-win.iso` >> [Finish]
+  - [Add Hardware] >> Storage >> Device type: Disk device >> Bus type: SCSI >> Create a disk image for the virtual machine: 200 GiB >> Advanced options >> Serial: B4NN3D53R14L >> [Finish]
+  - [Begin Installation] >> Virtual Machine >> Shut Down >> Force Off
 
 ⚠ You will now have Controller SCSI 0 incorrectly set to lsilogic ⚠
 
