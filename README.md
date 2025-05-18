@@ -92,26 +92,8 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
 - Local install media (ISO image or CDROM) >> Windows10.iso >> Choose Memory and CPU settings >> Disable storage for this virtual machine >> Customize configuration before install
 
   - Overview >> Chipset: Q35, **Firmware**: UEFI >> [Apply]
-  - [Add Hardware] >> Storage >> Device type: CDROM device >> Manage... `virtio-win.iso` >> [Finish]
-  - [Add Hardware] >> Storage >> Device type: Disk device >> Bus type: SCSI >> Create a disk image for the virtual machine: 200 GiB >> Advanced options >> Serial: B4NN3D53R14L >> [Finish]
+  - [Add Hardware] >> Storage >> Device type: Disk device >> Bus type: SATA >> Create a disk image for the virtual machine: 200 GiB >> Advanced options >> Serial: B4NN3D53R14L >> [Finish]
   - [Begin Installation] >> Virtual Machine >> Shut Down >> Force Off
-
-⚠ You will now have Controller SCSI 0 incorrectly set to lsilogic ⚠
-
-- Controller SCSI 0 >> Model: VirtIO SCSI >> [Apply]
-- SCSI Disk 1 >> XML
-- Replace `<domain type="kvm">` and [Apply]:
-  <details>
-    <summary>Spoiler <b>(do NOT use this example, modify it instead)</b></summary>
-
-  ```shell
-    <serial>B4NN3D53R14L</serial>
-    <vendor>KINGSPEC</vendor>
-    <product>SCSI256G</product>
-    <address type="drive" controller="0" bus="0" target="0" unit="0"/>
-  </disk>
-  ```
-  </details>
 
 ### Configure VM XML
 
@@ -338,7 +320,7 @@ sudo systemctl restart libvirtd
 - Virtual Machine Manager >> [Open] >> View >> Details >> Overview >> XML
 
 
-- Replace `</domain>` (it should be at the bottom of the xml) and [Apply]:
+- Replace `</qemu:commandline>` (it should be at the bottom of the xml) and [Apply]:
   <details>
     <summary>Spoiler</summary>
 
