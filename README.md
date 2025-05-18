@@ -35,6 +35,8 @@
 * [x] Press F8 to dump **r5apex** and scan for offsets
 * [x] Press F9 twice to terminate cheat
 
+# The guide may contain a few scuffs, please let me know if you run into any issues when following the guide.
+
 ### 1. Environment set up in Linux
 
 - Enter BIOS and enable Virtualization Technology:
@@ -85,62 +87,31 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
 
 # 2.3 VM Setup
 
-- Create the vm, add the w10 iso.
-- Uncheck the automatically detect box and change it to windows 10 (this is to make sure that the vm is called win10)
-- Set the storage to 200 gb | Set the Memory to whatever you want (I use half) and CPU will be changed later
-- Check "Customize configuration before install" and click finish
-- Now the important stuff
-- Set the chipset to Q35 and Firmware to UEFI
-- Check your cpu info via google or ```lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'```
-- I set mine to 8 cores, 1 socket, and 1 thread.
-- Now go to disk drive, and set it to VirIO and click advanced options > Cache Mode > Write back > change the serial to whatever nika uses, at this time it is "B4NN3D53R14L" > apply
-- Go to boot options > check SATA CDROM 1 > put it to the top of priority > apply
-- Add hardware > (It should already be on storage) > device type > change to "CDROM device" > Be sure the bus type is SATA > Finish
+- Virtual Machine Manager >> File >> New Virtual Machine
 
-# Windows Setup
+- Local install media (ISO image or CDROM) >> Windows10.iso >> Choose Memory and CPU settings >> Disable storage for this virtual machine >> Customize configuration before install
 
-- After you accept the terms and service click "Custom: install windows only (advanced)"
-- load driver > ok > ```E:\amd64\w10\viostor.inf``` > next (it will load for a bit) > it should show your storage drive just click next
-- Just go thorugh the w10 installation like normal
-- (OPTIONAL) when you get to the point of signing into or creating a microsoft account click "create an account", disconnect yourself from the wifi > click the back arrow > and you can just name yourself and reconnnect to the wifi.
-- once you finish and get into the actual w10 just turn off the vm
+-- Overview >> Chipset: Q35, Firmware: OVMF_CODE_4M.secboot >> [Apply]
+-- [Add Hardware] >> Storage >> Device type: CDROM device >> Manage... virtio-win.iso >> [Finish]
+-- [Add Hardware] >> Storage >> Device type: Disk device >> Bus type: SCSI >> Create a disk image for the virtual machine: 200 GiB >> Advanced options >> Serial: B4NN3D53R14L >> [Finish]
+-- [Begin Installation] >> Virtual Machine >> Shut Down >> Force Off
 
-# Script installation
+⚠ You will now have Controller SCSI 0 incorrectly set to lsilogic ⚠
 
-- Run ```git clone https://gitlab.com/risingprismtv/single-gpu-passthrough.git``` 
-- Either CD into the folder or go into the folder and right click somewhere in a blank space and open terminal
-- Run ```sudo chmod +x install_hooks.sh``` then run ```sudo ./install_hooks.sh```
-- (Optional) Verify the files: 
-- in /etc/systemd/system/ there should be "libvirt-nosleep@.service"
-- in /usr/local/bin/ there should be vfio-startup and vfio-teardown
-- in /etc/libvirt/hooks/ there should be "qemu"
+- Controller SCSI 0 >> Model: VirtIO SCSI >> [Apply]
+- SCSI Disk 1 >> XML
+- Replace `<domain type="kvm">` and [Apply]:
+  <details>
+    <summary>Spoiler <b>(do NOT use this example, modify it instead)</b></summary>
 
-- AMD GPU'S Potential Fix below
-
-- Remove the files from the directory in "(Optional) Verify the files"
-- Run ```git clone https://gitlab.com/akshaycodes/vfio-script```
-- Open the terminal in the folder or cd into it
-- ```sudo bash vfio_script_install.sh```
-
-# Attaching the GPU
-
-- Remove ```Display spice``` and remove ```Video QXL``` (If it is grey remove the other one first)
-
-- Run 
-```
-#!/bin/bash
-shopt -s nullglob
-for g in /sys/kernel/iommu_groups/*; do
-    echo "IOMMU Group ${g##*/}:"
-    for d in $g/devices/*; do
-        echo -e "\t$(lspci -nns ${d##*/})"
-    done;
-done;
-```
-- One of the groups should contain your gpu (DO NOT ADD BRIDGES)
-Example: ![image](https://github.com/user-attachments/assets/e78ebe2d-e975-408f-b44d-4f6e09a20769)
-- So in that example you would add 07:00.0 and 07:00.1 you would NOT add the Host bridge nor PCI bridge.
-- Now add hardware > PCI Host Device > and add whatever your gpu device id is
+  ```shell
+    <serial>B4NN3D53R14L</serial>
+    <vendor>KINGSPEC</vendor>
+    <product>SCSI256G</product>
+    <address type="drive" controller="0" bus="0" target="0" unit="0"/>
+  </disk>
+  ```
+  </details>
 
 ### Configure VM XML
 
@@ -274,6 +245,51 @@ Example: ![image](https://github.com/user-attachments/assets/e78ebe2d-e975-408f-
   </details>
 
 - IMPORTANT: I am not really sure if this is a one case scenario, but if you have network issues on intel set aes to require
+
+# Windows Setup
+
+- After you accept the terms and service click "Custom: install windows only (advanced)"
+- load driver > ok > ```E:\amd64\w10\viostor.inf``` > next (it will load for a bit) > it should show your storage drive just click next
+- Just go thorugh the w10 installation like normal
+- (OPTIONAL) when you get to the point of signing into or creating a microsoft account click "create an account", disconnect yourself from the wifi > click the back arrow > and you can just name yourself and reconnnect to the wifi.
+- once you finish and get into the actual w10 just turn off the vm
+
+# Script installation
+
+- Run ```git clone https://gitlab.com/risingprismtv/single-gpu-passthrough.git``` 
+- Either CD into the folder or go into the folder and right click somewhere in a blank space and open terminal
+- Run ```sudo chmod +x install_hooks.sh``` then run ```sudo ./install_hooks.sh```
+- (Optional) Verify the files: 
+- in /etc/systemd/system/ there should be "libvirt-nosleep@.service"
+- in /usr/local/bin/ there should be vfio-startup and vfio-teardown
+- in /etc/libvirt/hooks/ there should be "qemu"
+
+- AMD GPU'S Potential Fix below
+
+- Remove the files from the directory in "(Optional) Verify the files"
+- Run ```git clone https://gitlab.com/akshaycodes/vfio-script```
+- Open the terminal in the folder or cd into it
+- ```sudo bash vfio_script_install.sh```
+
+# Attaching the GPU
+
+- Remove ```Display spice``` and remove ```Video QXL``` (If it is grey remove the other one first)
+
+- Run 
+```
+#!/bin/bash
+shopt -s nullglob
+for g in /sys/kernel/iommu_groups/*; do
+    echo "IOMMU Group ${g##*/}:"
+    for d in $g/devices/*; do
+        echo -e "\t$(lspci -nns ${d##*/})"
+    done;
+done;
+```
+- One of the groups should contain your gpu (DO NOT ADD BRIDGES)
+Example: ![image](https://github.com/user-attachments/assets/e78ebe2d-e975-408f-b44d-4f6e09a20769)
+- So in that example you would add 07:00.0 and 07:00.1 you would NOT add the Host bridge nor PCI bridge.
+- Now add hardware > PCI Host Device > and add whatever your gpu device id is
 
 ### Configure evdev passthrough (on Linux PC)
 
