@@ -89,11 +89,22 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
 
 - Virtual Machine Manager >> File >> New Virtual Machine
 
-- Local install media (ISO image or CDROM) >> Windows10.iso >> Choose Memory and CPU settings >> Disable storage for this virtual machine >> Customize configuration before install
-
-  - Overview >> Chipset: Q35, **Firmware**: UEFI >> [Apply]
+- Local install media (ISO image or CDROM) >> `Windows10.iso` >> Choose Memory and CPU settings >> **Disable** storage for this virtual machine >> Customize configuration before install
+  - Overview >> Chipset: Q35, **Firmware**: `OVMF_CODE_4M.secboot` or `UEFI` if the other FW is not available >> [Apply]
   - [Add Hardware] >> Storage >> Device type: Disk device >> Bus type: SATA >> Create a disk image for the virtual machine: 200 GiB >> Advanced options >> Serial: B4NN3D53R14L >> [Finish]
   - [Begin Installation] >> Virtual Machine >> Shut Down >> Force Off
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> SATA Disk 1 >> XML
+
+
+- Replace `<driver name="qemu" type="raw"/>` and [Apply]:
+  <details>
+    <summary>Spoiler</summary>
+
+  ```shell
+  <driver name="qemu" type="raw" cache="none" discard="ignore"/>
+  ```
+  </details>
 
 ### Configure VM XML
 
@@ -191,7 +202,7 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
     <feature policy="require" name="hypervisor"/>
     <feature policy="disable" name="vmx"/>
     <feature policy="disable" name="svm"/>
-    <feature policy="disable" name="aes"/>
+    <feature policy="require" name="aes"/>
     <feature policy="disable" name="x2apic"/>
     <feature policy="require" name="ibpb"/>
     <feature policy="require" name="invtsc"/>
@@ -386,7 +397,27 @@ sudo -E ./nika
 <feature policy="require" name="svm"/>
 ```
 
-### 8. memflow-kvm (faster VMREAD)
+### 8. Spoof qemu-system-x86_64 (mandatory)
+
+- This script is based on: [Scrut1ny/Hypervisor-Phantom](https://github.com/Scrut1ny/Hypervisor-Phantom)
+
+- Run `qemupatch.sh` to clone, patch, and build `qemu-system-x86_64` with generated data.
+  - You can edit `default_models` with real data.
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> Overview >> XML
+
+
+- Replace `<devices>` and [Apply]:
+  <details>
+    <summary>Spoiler</summary>
+
+  ```shell
+  <devices>
+    <emulator>/usr/local/bin/qemu-system-x86_64</emulator>
+  ```
+  </details>
+
+### 9. memflow-kvm (faster VMREAD)
 
 
   <details>
