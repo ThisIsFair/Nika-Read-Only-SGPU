@@ -1,4 +1,4 @@
-## IMPROTANT: The guide is not up to date with the new steps and I've been dealing with a lot recently so I will update the steps hopefully this week when I'm free to do so, you can also try to incorporate the new steps on your own or wait till I do so.
+## IMPROTANT: The guide is not up to date with the new steps, and I've been dealing with a lot recently, so I will update the steps hopefully this week when I'm free to do so. You can also try to incorporate the new steps on your own or wait till I do so.
 
 # Nika Read Only
 
