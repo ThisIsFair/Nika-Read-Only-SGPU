@@ -1,4 +1,4 @@
-## IMPROTANT: The guide is not up to date with the new steps, and I've been dealing with a lot recently, so I will update the steps hopefully this week when I'm free to do so. You can also try to incorporate the new steps on your own or wait till I do so.
+## IMPROTANT: I have not tested the guide with the new steps, I am also not sure when I will be able to, but please reach out if you do run into any issues, I'll be happy to help troubleshoot it for or with you.
 
 # Nika Read Only
 
@@ -92,9 +92,23 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
 - Virtual Machine Manager >> File >> New Virtual Machine
 
 - Local install media (ISO image or CDROM) >> `Windows10.iso` >> Choose Memory and CPU settings >> **Disable** storage for this virtual machine >> Customize configuration before install
-  - Overview >> Chipset: Q35, **Firmware**: `OVMF_CODE_4M.secboot` or `UEFI` if the other FW is not available >> [Apply]
-  - [Add Hardware] >> Storage >> Device type: Disk device >> Bus type: SATA >> Create a disk image for the virtual machine: 200 GiB >> Advanced options >> Serial: B4NN3D53R14L >> [Finish]
+  - Overview >> Chipset: Q35, **Firmware**: OVMF_CODE_4M.secboot or UEFI (if `OVMF_CODE_4M.secboot` is not an option) >> [Apply]
+  - [Add Hardware] >> Storage >> Device type: Disk device >> Bus type: SATA >> Create a disk image for the virtual machine: 240 GiB >> Advanced options >> Serial: B4NN3D53R14L >> [Finish]
   - [Begin Installation] >> Virtual Machine >> Shut Down >> Force Off
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> Video QXL >> Model: VGA >> [Apply]
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> NIC :xx:xx:xx >> XML
+
+
+- Replace `<mac address="52:54:00:xx:xx:xx"/>` and [Apply]:
+  <details>
+    <summary>Spoiler</summary>
+
+  ```shell
+  <mac address="xx:xx:xx:xx:xx:xx"/>
+  ```
+  </details>
 
 - Virtual Machine Manager >> [Open] >> View >> Details >> SATA Disk 1 >> XML
 
@@ -107,7 +121,7 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
   <driver name="qemu" type="raw" cache="none" discard="ignore"/>
   ```
   </details>
-
+  
 ### Configure VM XML
 
 - Virtual Machine Manager >> [Open] >> View >> Details >> Overview >> XML
@@ -123,19 +137,24 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
       <qemu:arg value="-smbios"/>
       <qemu:arg value="type=0,vendor=ASUS,version=X.23,date=06/14/2024,release=12.34"/>
       <qemu:arg value="-smbios"/>
-      <qemu:arg value="type=1,manufacturer=ASUS,product=ASUS Zenbook 14X UX1337,version=23.41,serial=D3E4F56789"/>
+      <qemu:arg value="type=1,manufacturer=ASUS,product=ASUS Zenbook 14X UM5401,version=23.41,serial=D3E4F56789"/>
       <qemu:arg value="-smbios"/>
       <qemu:arg value="type=2,manufacturer=ASUS,product=87FD,version=34.12,serial=B1C2D3E4F56789"/>
       <qemu:arg value="-smbios"/>
       <qemu:arg value="type=3,manufacturer=ASUS,version=23.41,serial=D3E4F56789"/>
       <qemu:arg value="-smbios"/>
-      <qemu:arg value="type=17,manufacturer=Samsung,loc_pfx=BANK,speed=4800,serial=E4F56789"/>
+      <qemu:arg value="type=4,manufacturer=Advanced Micro Devices,, Inc.,version=AMD Ryzen 9 6900HX with Radeon Graphics,max-speed=4900,current-speed=3300"/>
       <qemu:arg value="-smbios"/>
-      <qemu:arg value="type=4,manufacturer=Intel(R) Corporation,version=13th Gen Intel(R) Core(TM) i9-13900H @ 2.60GHz,max-speed=5400,current-speed=2600"/>
+      <qemu:arg value="type=8,internal_reference=J1A1,external_reference=Keyboard,connector_type=0x0F,port_type=0x0D"/>
+      <qemu:arg value="-smbios"/>
+      <qemu:arg value="type=8,internal_reference=J1A1,external_reference=Mouse,connector_type=0x0F,port_type=0x0E"/>
+      <qemu:arg value="-smbios"/>
+      <qemu:arg value="type=9,slot_designation=J6C1,slot_type=0xAA,slot_data_bus_width=0x0D,current_usage=0x04,slot_length=0x04,slot_id=0x01,slot_characteristics1=0x04,slot_characteristics2=0x03"/>
+      <qemu:arg value="-smbios"/>
+      <qemu:arg value="type=17,manufacturer=Samsung,bank=BANK 0,speed=4800,serial=E4F56789"/>
     </qemu:commandline>
   ```
   </details>
-
 
 - Replace `</metadata>` and [Apply]:
   <details>
@@ -155,91 +174,88 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
 
 - Replace from `<memory unit="KiB">4194304</memory>` to `<vcpu placement="static">2</vcpu>` and [Apply]:
   <details>
-    <summary>Spoiler</summary>
+    <summary>Spoiler <b>(use a commercial module size like 12, 24, or 48 GiB; vcpu example for a 24 threads host CPU)</b></summary>
 
   ```shell
-  <memory unit="KiB">12582912</memory>
-  <currentMemory unit="KiB">12582912</currentMemory>
-  <vcpu placement="static">4</vcpu>
+  <memory unit="GiB">12</memory>
+  <currentMemory unit="GiB">12</currentMemory>
+  <vcpu placement="static">24</vcpu>
   ```
   </details>
 
-
 - Replace from `<features>` to `</clock>` and [Apply]:
   <details>
-    <summary>Spoiler</summary>
+    <summary>Spoiler <b>(example for a 12 cores, 24 threads host CPU; any mismatch will be detected)</b></summary>
 
   ```shell
   <features>
     <acpi/>
     <apic/>
     <hyperv mode="custom">
-      <relaxed state="on"/>
-      <vapic state="on"/>
-      <spinlocks state="on" retries="8191"/>
-      <vpindex state="on"/>
-      <synic state="on"/>
-      <stimer state="on">
-        <direct state="on"/>
-      </stimer>
-      <reset state="on"/>
-      <vendor_id state="on" value="GenuineIntel"/>
-      <frequencies state="on"/>
+      <relaxed state="off"/>
+      <vapic state="off"/>
+      <spinlocks state="off"/>
+      <vpindex state="off"/>
+      <runtime state="off"/>
+      <synic state="off"/>
+      <stimer state="off"/>
+      <reset state="off"/>
+      <vendor_id state="off"/>
+      <frequencies state="off"/>
       <reenlightenment state="off"/>
-      <tlbflush state="on"/>
-      <ipi state="on"/>
+      <tlbflush state="off"/>
+      <ipi state="off"/>
       <evmcs state="off"/>
-      <avic state="on"/>
+      <avic state="off"/>
     </hyperv>
     <kvm>
       <hidden state="on"/>
     </kvm>
+    <pmu state="on"/>
     <vmport state="off"/>
     <smm state="on"/>
     <ioapic driver="kvm"/>
+    <msrs unknown="fault"/>
   </features>
   <cpu mode="host-passthrough" check="none" migratable="off">
-    <topology sockets="1" dies="1" cores="4" threads="1"/>
+    <topology sockets="1" cores="12" threads="2"/>
     <cache mode="passthrough"/>
-    <feature policy="require" name="hypervisor"/>
-    <feature policy="disable" name="vmx"/>
-    <feature policy="disable" name="svm"/>
-    <feature policy="require" name="aes"/>
+    <feature policy="disable" name="aes"/>
+    <feature policy="disable" name="hypervisor"/>
+    <feature policy="require" name="svm"/>
+    <feature policy="require" name="vmx"/>
     <feature policy="disable" name="x2apic"/>
-    <feature policy="require" name="ibpb"/>
+    <feature policy="require" name="topoext"/>
     <feature policy="require" name="invtsc"/>
-    <feature policy="require" name="pdpe1gb"/>
-    <feature policy="require" name="ssbd"/>
-    <feature policy="require" name="amd-ssbd"/>
-    <feature policy="require" name="stibp"/>
-    <feature policy="require" name="amd-stibp"/>
-
-    <feature policy="require" name="tsc-deadline"/>
-    <feature policy="require" name="tsc_adjust"/>
-    <feature policy="require" name="arch-capabilities"/>
-    <feature policy="require" name="rdctl-no"/>
-    <feature policy="require" name="skip-l1dfl-vmentry"/>
-    <feature policy="require" name="mds-no"/>
-    <feature policy="require" name="pschange-mc-no"/>
-
-    <feature policy="require" name="cmp_legacy"/>
-    <feature policy="require" name="xsaves"/>
-    <feature policy="require" name="perfctr_core"/>
-    <feature policy="require" name="clzero"/>
-    <feature policy="require" name="xsaveerptr"/>
+    <feature policy="disable" name="amd-ssbd"/>
+    <feature policy="disable" name="ssbd"/>
+    <feature policy="disable" name="virt-ssbd"/>
+    <feature policy="disable" name="rdpid"/>
+    <feature policy="disable" name="rdtscp"/>
   </cpu>
-  <clock offset="timezone" timezone="Europe/London">
-    <timer name="rtc" present="no" tickpolicy="catchup"/>
-    <timer name="pit" tickpolicy="discard"/>
-    <timer name="hpet" present="no"/>
+  <clock offset="localtime">
+    <timer name="tsc" present="yes" tickpolicy="discard" mode="native"/>
+    <timer name="hpet" present="yes"/>
+    <timer name="rtc" present="no"/>
+    <timer name="pit" present="no"/>
     <timer name="kvmclock" present="no"/>
-    <timer name="hypervclock" present="yes"/>
-    <timer name="tsc" present="yes" mode="native"/>
+    <timer name="hypervclock" present="no"/>
   </clock>
   ```
   </details>
 
-- IMPORTANT: I am not really sure if this is a one case scenario, but if you have network issues on intel set aes to require
+- IMPORTANT: I am not really sure if this is a one case scenario, but if you have network issues on intel set aes to require for the steup above
+
+  - Replace from `<memballoon model="virtio">` to `</memballoon>` and [Apply]:
+  <details>
+    <summary>Spoiler</summary>
+
+  ```shell
+  <memballoon model="none"/>
+  ```
+  </details>
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> Tablet >> [Remove]
 
 # Windows Setup
 
@@ -302,6 +318,7 @@ usb-SONiX_USB_DEVICE-event-kbd -> ../event8
 ```
 
 - By symlink `../mouse0` you find that `usb-COMPANY_USB_Device` is your **mouse**.
+
 - You are looking for `event-mouse` and `event-kbd`:
   - `usb-COMPANY_USB_Device-if01-event-mouse -> ../event5` is your **mouse**.
   - `usb-SONiX_USB_DEVICE-event-kbd -> ../event8` is your **keyboard**.
@@ -327,6 +344,8 @@ cgroup_device_acl = [
 ```shell
 sudo systemctl restart libvirtd
 ```
+
+- Toggle input with LEFT_CTRL + RIGHT_CTRL when needed.
 
 ### Configure VM
 
@@ -419,7 +438,106 @@ sudo -E ./nika
   ```
   </details>
 
-### 9. memflow-kvm (faster VMREAD)
+  ### 7. Spoof qemu-system-x86_64 (mandatory)
+
+- This script is based on: [Scrut1ny/Hypervisor-Phantom](https://github.com/Scrut1ny/Hypervisor-Phantom)
+
+
+  <details>
+    <summary>Build on <b>Fedora Linux</b>:</summary>
+
+  ```shell
+  sudo dnf builddep qemu
+  sudo dnf install acpica-tools
+  ```
+  </details>
+
+
+  <details>
+    <summary>Build on <b>Debian Linux</b>:</summary>
+
+  ```shell
+  sudo apt build-dep qemu
+  sudo apt install acpica-tools
+  ```
+  </details>
+
+- Run `qemupatch.sh` to clone, patch, and build `qemu-system-x86_64` with generated data.
+  - You can edit `default_models` with real data.
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> Overview >> XML
+
+
+- Replace `<devices>` and [Apply]:
+  <details>
+    <summary>Spoiler</summary>
+
+  ```shell
+  <pm>
+    <suspend-to-mem enabled="yes"/>
+    <suspend-to-disk enabled="no"/>
+  </pm>
+  <devices>
+    <emulator>/usr/local/bin/qemu-system-x86_64</emulator>
+  ```
+  </details>
+
+
+- Replace `</qemu:commandline>` and [Apply]:
+  <details>
+    <summary>Spoiler</summary>
+
+  ```shell
+    <qemu:arg value="-acpitable"/>
+    <qemu:arg value="file=/usr/local/bin/ssdt1.aml"/>
+    <qemu:arg value="-acpitable"/>
+    <qemu:arg value="file=/usr/local/bin/ssdt2.aml"/>
+  </qemu:commandline>
+  ```
+  </details>
+
+  ### 7.1 Spoof OVMF (mandatory)
+
+- This script is based on: [Scrut1ny/Hypervisor-Phantom](https://github.com/Scrut1ny/Hypervisor-Phantom)
+
+
+  <details>
+    <summary>Build on <b>Fedora Linux</b>:</summary>
+
+  ```shell
+  sudo dnf install nasm
+  ```
+  </details>
+
+
+  <details>
+    <summary>Build on <b>Debian Linux</b>:</summary>
+
+  ```shell
+  sudo apt install nasm
+  ```
+  </details>
+
+- Run `edk2atch.sh` to clone, patch, and build `OVMF` with generated data.
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> Overview >> XML
+
+
+- Replace from `<os firmware="efi">` to `</os>` and [Apply]:
+  <details>
+    <summary>Spoiler</summary>
+
+  ```shell
+  <os>
+    <type arch="x86_64" machine="pc-q35-9.2">hvm</type>
+    <loader readonly="yes" secure="yes" type="pflash" format="raw">/usr/share/edk2/ovmf/OVMF_CODE_4M.patched.fd</loader>
+    <nvram format="raw">/usr/share/edk2/ovmf/OVMF_VARS_4M.patched.fd</nvram>
+    <bootmenu enable="yes"/>
+  </os>
+  ```
+  </details>
+
+### 8. memflow-kvm (faster VMREAD)
 
 
   <details>
