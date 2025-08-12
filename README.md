@@ -259,11 +259,8 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
 
 # Windows Setup
 
-- After you accept the terms and service click "Custom: install windows only (advanced)"
-- load driver > ok > ```E:\amd64\w10\viostor.inf``` > next (it will load for a bit) > it should show your storage drive just click next
-- Just go thorugh the w10 installation like normal
-- (OPTIONAL) when you get to the point of signing into or creating a microsoft account click "create an account", disconnect yourself from the wifi > click the back arrow > and you can just name yourself and reconnnect to the wifi.
-- once you finish and get into the actual w10 just turn off the vm
+- Virtual Machine Manager >> [Open] >> View >> Details >> Boot Options >> Boot device order:
+  * [x] SATA Disk 1 >> [Apply]
 
 # Script installation
 
