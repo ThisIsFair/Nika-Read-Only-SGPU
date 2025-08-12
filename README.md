@@ -561,26 +561,12 @@ https://github.com/memflow/memflow-kvm/releases
 sudo dkms install --archive=memflow-0.2.1-source-only.dkms.tar.gz
 ```
 
-- IMPORTANT AFTER EVERY REBOOT:
-<details>
-<summary>Do the Following after every reboot</summary>
-
-- Run `sudo setenforce 0`  
-- Run `sudo systemctl start sshd`  
-
-</details>
-
-- If you do not know your IP run `ip addr`  
-- It may be different for you but I can find mine in 2: enp5s0 (It should be purple)
-- You may not have audio, the fix is adding your audio controller. 
-- Example: My audio device is called ```Audio device: Advanced Micro Devices, Inc. [AMD] Starship/Matisse HD Audio Controller``` which I just added as a PCI device and it fixed.
-- Now install gpu drivers > install putty > connect to putty > open apex > run the command below
-
 - Run:
 ```shell
 sudo modprobe memflow
 cd path/to/extracted/repository
 sudo -E ./nika
 ```
+
 
 - If kvm does not get detected add this to your grub line `ibt=off`(or try `no_cet` if that doesn't work)
