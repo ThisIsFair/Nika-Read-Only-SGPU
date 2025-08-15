@@ -1,4 +1,7 @@
-## IMPROTANT: I have not tested the guide with the new steps, I am also not sure when I will be able to, but please reach out if you do run into any issues, I'll be happy to help troubleshoot it for or with you.
+# IMPORTANT: The spoofing steps are creating an issue, which makes this guide pointless to follow as of right now. Please do not follow the guide, as it'll be a waste of time, at least until I or someone else can come up with a way to resolve it. This note will be replaced when the guide is good to follow again. 
+
+
+
 
 # Nika Read Only
 
