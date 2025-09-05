@@ -1,4 +1,4 @@
-# IMPORTANT: The spoofing steps are creating an issue, which makes this guide pointless to follow as of right now. Please do not follow the guide, as it'll be a waste of time, at least until I or someone else can come up with a way to resolve it. This note will be replaced when the guide is good to follow again. 
+# IMPORTANT: The spoofing steps are creating an issue, which makes this guide pointless to follow as of right now. Please do not follow the guide, as it'll be a waste of time, at least until I or someone else can come up with a way to resolve it. This note will be replaced when the guide is good to follow again.
 
 
 
@@ -404,21 +404,7 @@ sudo -E ./nika
 ```
 - Open Nika.ini and change ```START_OVERLAY = YES``` to ```START_OVERLAY = NO```
 
-### 7. Disable hypervisor (mandatory)
-
-- Edit XML for Intel (on Linux PC):
-```shell
-<feature policy="disable" name="hypervisor"/>
-<feature policy="require" name="vmx"/>
-```
-
-- Edit XML for AMD (on Linux PC):
-```shell
-<feature policy="disable" name="hypervisor"/>
-<feature policy="require" name="svm"/>
-```
-
-  ### 7. Spoof qemu-system-x86_64 (mandatory)
+### 7. Spoof qemu-system-x86_64 (mandatory)
 
 - This script is based on: [Scrut1ny/Hypervisor-Phantom](https://github.com/Scrut1ny/Hypervisor-Phantom)
 
@@ -428,7 +414,6 @@ sudo -E ./nika
 
   ```shell
   sudo dnf builddep qemu
-  sudo dnf install acpica-tools
   ```
   </details>
 
@@ -438,7 +423,6 @@ sudo -E ./nika
 
   ```shell
   sudo apt build-dep qemu
-  sudo apt install acpica-tools
   ```
   </details>
 
@@ -448,7 +432,7 @@ sudo -E ./nika
 - Virtual Machine Manager >> [Open] >> View >> Details >> Overview >> XML
 
 
-- Replace `<devices>` and [Apply]:
+- Replace from `<pm>` to `</emulator>` and [Apply]:
   <details>
     <summary>Spoiler</summary>
 
@@ -476,7 +460,7 @@ sudo -E ./nika
   ```
   </details>
 
-  ### 7.1 Spoof OVMF (mandatory)
+### 7.1 Spoof OVMF (mandatory)
 
 - This script is based on: [Scrut1ny/Hypervisor-Phantom](https://github.com/Scrut1ny/Hypervisor-Phantom)
 
@@ -485,6 +469,7 @@ sudo -E ./nika
     <summary>Build on <b>Fedora Linux</b>:</summary>
 
   ```shell
+  sudo dnf install acpica-tools
   sudo dnf install nasm
   ```
   </details>
@@ -494,6 +479,7 @@ sudo -E ./nika
     <summary>Build on <b>Debian Linux</b>:</summary>
 
   ```shell
+  sudo apt install acpica-tools
   sudo apt install nasm
   ```
   </details>
@@ -517,7 +503,7 @@ sudo -E ./nika
   ```
   </details>
 
-### 8. memflow-kvm (faster VMREAD)
+### 8. memflow-kvm (not required, ignore this)
 
 
   <details>
@@ -532,7 +518,7 @@ sudo -E ./nika
   <details>
     <summary>Install <b>dkms</b> on <b>Debian Linux</b>:</summary>
 
-    sudo apt install linux-headers-amd64=6.1.123-1
+    sudo apt install linux-headers-amd64=6.12.38-1
     sudo apt install dkms
   </details>
 
