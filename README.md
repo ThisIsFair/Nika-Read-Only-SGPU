@@ -55,12 +55,14 @@ Nika Read Only is an external cheat for Apex Legends, designed to run on a Linux
 
 ## Prerequisites
 
+REMINDER: This is a new version of the guide and may have issues, you may follow the [Old Guide](https://github.com/ThisIsFair/Nika-Read-Only-SGPU/blob/main/README%20OLD%20Format.md) if you'd like.
+
 This guide was tested on Fedora 41 KDE but should work on other Linux distributions with equivalent commands. For distro-specific issues, consult documentation or use tools like ChatGPT to adapt commands.
 
 - **Download Fedora 41 KDE or Fedora 42 KDE**: [Fedora KDE 41](https://fedora.mirrorservice.org/fedora/linux/releases/41/Spins/x86_64/iso/Fedora-KDE-Live-x86_64-41-1.4.iso) or [Fedora KDE 42](https://download.fedoraproject.org/pub/fedora/linux/releases/42/KDE/x86_64/iso/Fedora-KDE-Desktop-Live-42-1.1.x86_64.iso)
 - Ensure your system has a password set for use with PuTTY.
 - Update your OS: `sudo dnf update` and reboot.
-- Install NVIDIA drivers (skip for AMD GPUs): `sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda`
+- Install NVIDIA drivers (I am usnure about AMD GPUs): `sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda`
 - Install virtualization tools: `sudo dnf group install --with-optional virtualization`
 
 ## Setup Instructions
@@ -420,21 +422,24 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
      ```
    - Mouse: `usb-COMPANY_USB_Device-if01-event-mouse -> ../event5`
    - Keyboard: `usb-SONiX_USB_DEVICE-event-kbd -> ../event8`
-2. Edit `/etc/libvirt/qemu.conf` and uncomment/add:
+2. Edit `/etc/libvirt/qemu.conf` and uncomment:
 
-   ```shell
-   cgroup_device_acl = [
-       "/dev/null", "/dev/full", "/dev/zero",
-       "/dev/random", "/dev/urandom",
-       "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
-       "/dev/rtc", "/dev/hpet",
-       "/dev/input/by-id/usb-COMPANY_USB_Device-if01-event-mouse",
-       "/dev/input/by-id/usb-SONiX_USB_DEVICE-event-kbd",
-       "/dev/input/event5",
-       "/dev/input/event8",
-       "/dev/userfaultfd"
-   ]
-   ```
+```shell
+cgroup_device_acl = [
+        "/dev/null", "/dev/full", "/dev/zero",
+        "/dev/random", "/dev/urandom",
+        "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
+        "/dev/rtc", "/dev/hpet",
+        "/dev/input/by-id/usb-COMPANY_USB_Device-if01-event-mouse",
+        "/dev/input/by-id/usb-SONiX_USB_DEVICE-event-kbd",
+        "/dev/input/event5",
+        "/dev/input/event8",
+        "/dev/userfaultfd"
+]
+```
+- Include `cgroup_device_acl` as above, replacing `event-kbd`, `event-mouse`, and the path to each symlink `/dev/input/eventX`.
+
+
 3. Restart libvirtd: `sudo systemctl restart libvirtd`
 4. Add evdev to VM XML:
 
@@ -444,7 +449,11 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
    <qemu:arg value="-object"/>
    <qemu:arg value="input-linux,id=mouse1,evdev=/dev/input/by-id/usb-COMPANY_USB_Device-if01-event-mouse"/>
    ```
-5. Join input group: `sudo usermod -aG input $USER`
+5. Join input group:
+ ```shell
+test $UID = 0 && exit
+sudo usermod -aG input $USER
+```
 6. Toggle input with `LEFT_CTRL + RIGHT_CTRL`.
 
 ### 10. Disable Security Features
