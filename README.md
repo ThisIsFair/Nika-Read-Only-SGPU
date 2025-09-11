@@ -355,6 +355,10 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
 
 - Virtual Machine Manager >> [Open] >> View >> Details >> Tablet >> [Remove]
 
+- Virtual Machine Manager >> [Open] >> View >> Details >> Channel (spice) >> [Remove]
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> Controller VirtIO Serial 0 >> [Remove]
+
 ### 6. Configure Windows VM Boot
 
 1. In **Virtual Machine Manager** &gt; Boot Options, set **SATA Disk 1** as the first boot device. Apply.
@@ -569,34 +573,70 @@ sudo usermod -aG input $USER
 
 1. Edit `Nika.ini` and set `START_OVERLAY = NO`.
 
-### 14. No Longer Required: Memflow-KVM Setup (Ignore this step)
+### 14. Usage
 
-1. Install DKMS:
-   - **Fedora**:
+- For **window settings**, open; System Settings >> Window Management >> Window Rules >> Import... >> GLFW.kwinrule
+  - Also check; System Settings >> Display & Monitor >> Scale: 100%
 
-     ```shell
-     sudo dnf install kernel-devel-$(uname -r)
-     sudo dnf install kernel-devel-matched-$(uname -r)
-     sudo dnf install dkms
-     ```
-   - **Debian**:
+- Virtual Machine Manager >> [Open] >> View >> Details >> Video VGA >> Model: None >> [Apply]
 
-     ```shell
-     sudo apt install linux-headers-amd64=6.12.38-1
-     sudo apt install dkms
-     ```
-2. Download and install: memflow-0.2.1-source-only.dkms.tar.gz
+- You will be using video output from passthrough GPU instead of VGA virtual GPU.
 
-   ```shell
-   sudo dkms install --archive=memflow-0.2.1-source-only.dkms.tar.gz
-   ```
-3. Load module and run Nika:
+| Method                       | Latency   | ESP          | Cons                         |
+| ---------------------------- | --------- | ------------ | ---------------------------- |
+| Cable                        | 0 ms      | Glow         | Overlay on 2nd monitor       |
+| Capture card                 | 30-300 ms | Overlay+Glow | Investment for faster device |
+| Steam Remote Play            | 10 ms     | Overlay+Glow | Encoded video                |
 
-   ```shell
-   sudo modprobe memflow
-   cd path/to/extracted/repository
-   sudo -E ./nika
-   ```
+### 5.1 Cable
+
+- Plug monitor into passthrough GPU.
+
+### 5.2 Capture card
+
+
+  <details>
+    <summary>Install `gstreamer1.0-tools` on <b>Debian Linux</b>:</summary>
+
+    sudo apt install gstreamer1.0-tools
+  </details>
+
+- Plug capture card into passthrough GPU.
+
+- Open capture card raw feed with:
+```shell
+gst-launch-1.0 -v v4l2src device=/dev/video0 ! video/x-raw,width=1920,height=1080,framerate=60/1 ! videoconvert ! autovideosink
+```
+
+### 5.3 Steam Remote Play (if you can't connect)
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> NIC xx:xx:xx >> Network source: Bridge device... >> Device name: br0 >> [Apply]
+
+- Find your active network interface with:
+```shell
+ip -br addr show
+
+lo               UNKNOWN        127.0.0.1/8
+eno1             DOWN           
+wlp10s0f3u1      UP             172.16.0.100/24
+```
+
+- Manually configure `br0` every reboot:
+```shell
+sudo ip link add name br0 type bridge
+sudo ip addr add 10.0.0.1/24 dev br0
+sudo ip link set dev br0 up
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo iptables --table nat --append POSTROUTING --out-interface wlp10s0f3u1 -j MASQUERADE
+sudo iptables --insert FORWARD --in-interface br0 -j ACCEPT
+```
+
+- Windows VM static configuration (TCP/IPv4):
+  - IP address: 10.0.0.100
+  - Subnet mask: 255.255.255.0
+  - Default gateway: 10.0.0.1
+  - Preferred DNS server: 8.8.8.8
+  - Alternate DNS server: 9.9.9.9
 
 ## Troubleshooting
 
