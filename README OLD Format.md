@@ -1,4 +1,4 @@
-# IMPORTANT: The spoofing steps are creating an issue, which makes this guide pointless to follow as of right now. Please do not follow the guide, as it'll be a waste of time, at least until I or someone else can come up with a way to resolve it. This note will be replaced when the guide is good to follow again.
+# IMPORTANT: The spoofing steps are creating an issue, which makes this guide pointless to follow as of right now. Please do not follow the guide, as it'll be a waste of time, at least until I or someone else can come up with a way to resolve it. This note will be replaced when the guide is good to follow again. Additional Note: The guide may be missing some important parts, which is why I reformatted it so it's easier to update. 
 
 # Nika Read Only
 
@@ -334,6 +334,10 @@ log_outputs="2:file:/var/log/libvirt/libvirtd.log"```
 
 - Virtual Machine Manager >> [Open] >> View >> Details >> Tablet >> [Remove]
 
+- Virtual Machine Manager >> [Open] >> View >> Details >> Channel (spice) >> [Remove]
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> Controller VirtIO Serial 0 >> [Remove]
+
 # Windows Setup
 
 - Virtual Machine Manager >> [Open] >> View >> Details >> Boot Options >> Boot device order:
@@ -563,38 +567,71 @@ sudo usermod -aG input $USER
   ```
   </details>
 
-### 8. memflow-kvm (not required, ignore this)
+### 5. Usage
+
+- For **window settings**, open; System Settings >> Window Management >> Window Rules >> Import... >> GLFW.kwinrule
+  - Also check; System Settings >> Display & Monitor >> Scale: 100%
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> Video VGA >> Model: None >> [Apply]
+
+- You will be using video output from passthrough GPU instead of VGA virtual GPU.
+
+| Method                       | Latency   | ESP          | Cons                         |
+| ---------------------------- | --------- | ------------ | ---------------------------- |
+| Cable                        | 0 ms      | Glow         | Overlay on 2nd monitor       |
+| Capture card                 | 30-300 ms | Overlay+Glow | Investment for faster device |
+| Steam Remote Play            | 10 ms     | Overlay+Glow | Encoded video                |
+
+### 5.1 Cable
+
+- Plug monitor into passthrough GPU.
+
+### 5.2 Capture card
 
 
   <details>
-    <summary>Install <b>dkms</b> on <b>Fedora Linux</b>:</summary>
+    <summary>Install `gstreamer1.0-tools` on <b>Debian Linux</b>:</summary>
 
-    sudo dnf install kernel-devel-$(uname -r)
-    sudo dnf install kernel-devel-matched-$(uname -r)
-    sudo dnf install dkms
+    sudo apt install gstreamer1.0-tools
   </details>
 
+- Plug capture card into passthrough GPU.
 
-  <details>
-    <summary>Install <b>dkms</b> on <b>Debian Linux</b>:</summary>
-
-    sudo apt install linux-headers-amd64=6.12.38-1
-    sudo apt install dkms
-  </details>
-
-- Download `memflow-0.2.1-source-only.dkms.tar.gz` from:
-https://github.com/memflow/memflow-kvm/releases
-
-- Install:
+- Open capture card raw feed with:
 ```shell
-sudo dkms install --archive=memflow-0.2.1-source-only.dkms.tar.gz
+gst-launch-1.0 -v v4l2src device=/dev/video0 ! video/x-raw,width=1920,height=1080,framerate=60/1 ! videoconvert ! autovideosink
 ```
 
-- Run:
+### 5.3 Steam Remote Play (if you can't connect)
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> NIC xx:xx:xx >> Network source: Bridge device... >> Device name: br0 >> [Apply]
+
+- Find your active network interface with:
 ```shell
-sudo modprobe memflow
-cd path/to/extracted/repository
-sudo -E ./nika
+ip -br addr show
+
+lo               UNKNOWN        127.0.0.1/8
+eno1             DOWN           
+wlp10s0f3u1      UP             172.16.0.100/24
 ```
+
+- Manually configure `br0` every reboot:
+```shell
+sudo ip link add name br0 type bridge
+sudo ip addr add 10.0.0.1/24 dev br0
+sudo ip link set dev br0 up
+sudo sysctl -w net.ipv4.ip_forward=1
+sudo iptables --table nat --append POSTROUTING --out-interface wlp10s0f3u1 -j MASQUERADE
+sudo iptables --insert FORWARD --in-interface br0 -j ACCEPT
+```
+
+- Windows VM static configuration (TCP/IPv4):
+  - IP address: 10.0.0.100
+  - Subnet mask: 255.255.255.0
+  - Default gateway: 10.0.0.1
+  - Preferred DNS server: 8.8.8.8
+  - Alternate DNS server: 9.9.9.9
+
+### Troubleshooting:
 
 - If kvm does not get detected add this to your grub line `ibt=off`(or try `no_cet` if that doesn't work)
