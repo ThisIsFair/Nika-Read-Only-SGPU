@@ -74,6 +74,29 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
    - **AMD**: AMD-Vi (SVM) and IOMMU
 2. Disable "Above 4G Decoding".
 
+3. (3 and 3.1 are just for testing for the sgpu, you may attempt this step or skip over it)
+
+- Nested Virtualization for Intel:
+```shell
+sudo su
+echo "options kvm_intel nested=0" > /etc/modprobe.d/kvm.conf
+```
+
+- Nested Virtualization for AMD:
+```shell
+sudo su
+echo "options kvm_amd nested=0" > /etc/modprobe.d/kvm.conf
+```
+
+3.1
+
+- Preload `vfio-pci` module so it can bind to PCI IDs:
+```shell
+sudo su
+echo "softdep nvidia pre: vfio-pci" >> /etc/modprobe.d/kvm.conf
+echo "softdep nouveau pre: vfio-pci" >> /etc/modprobe.d/kvm.conf
+```
+
 ### 2. Configure Bootloader
 
 1. Edit GRUB configuration:
@@ -159,27 +182,26 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
   <domain type="kvm" xmlns:qemu="http://libvirt.org/schemas/domain/qemu/1.0">
     <qemu:commandline>
       <qemu:arg value="-smbios"/>
-      <qemu:arg value="type=0,vendor=ASUS,version=X.23,date=06/14/2024,release=12.34"/>
+      <qemu:arg value="type=1,manufacturer=HP,product=HP Laptop 14s-dq2xxx,version=23.41,serial=D3E4F56789"/>
       <qemu:arg value="-smbios"/>
-      <qemu:arg value="type=1,manufacturer=ASUS,product=ASUS Zenbook 14X UM5401,version=23.41,serial=D3E4F56789"/>
+      <qemu:arg value="type=2,manufacturer=HP,product=87FD,version=34.12,serial=B1C2D3E4F56789"/>
       <qemu:arg value="-smbios"/>
-      <qemu:arg value="type=2,manufacturer=ASUS,product=87FD,version=34.12,serial=B1C2D3E4F56789"/>
+      <qemu:arg value="type=3,manufacturer=HP,version=23.41,serial=D3E4F56789"/>
       <qemu:arg value="-smbios"/>
-      <qemu:arg value="type=3,manufacturer=ASUS,version=23.41,serial=D3E4F56789"/>
+      <qemu:arg value="type=4,sock_pfx=U3E1,manufacturer=Intel(R) Corporation,version=11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz,processor-id=0xBFEBFBFF000806C1"/>
       <qemu:arg value="-smbios"/>
-      <qemu:arg value="type=4,sock_pfx=XPTO,manufacturer=Advanced Micro Devices,, Inc.,version=AMD Ryzen 9 6900HX with Radeon Graphics"/>
+      <qemu:arg value="type=17,manufacturer=Samsung,part=M471A5244CB0-CWE,speed=3200,serial=D3E4F5"/>
       <qemu:arg value="-smbios"/>
       <qemu:arg value="type=8,internal_reference=J1A1,external_reference=Keyboard,connector_type=0x0F,port_type=0x0D"/>
       <qemu:arg value="-smbios"/>
       <qemu:arg value="type=8,internal_reference=J1A1,external_reference=Mouse,connector_type=0x0F,port_type=0x0E"/>
       <qemu:arg value="-smbios"/>
       <qemu:arg value="type=9,slot_designation=J6C1,slot_type=0xAA,slot_data_bus_width=0x0D,current_usage=0x04,slot_length=0x04,slot_id=0x01,slot_characteristics1=0x04,slot_characteristics2=0x03"/>
-      <qemu:arg value="-smbios"/>
-      <qemu:arg value="type=17,manufacturer=Samsung,part=M425R1GB4BB0-CQK,speed=4800,serial=E4F50000"/>
-    </qemu:commandline>
+      </qemu:commandline>
   ```
   </details>
 
+- VM created by QEMU is Intel, do not use AMD data.
 
 - Replace `</metadata>` and [Apply]:
   <details>
@@ -198,19 +220,19 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
 
 - Replace from `<memory unit="KiB">4194304</memory>` to `<vcpu placement="static">2</vcpu>` and [Apply]:
   <details>
-    <summary>Spoiler <b>(use a commercial memory size like 8, 16, or 24 GiB; vcpu example for a 24 threads host CPU)</b></summary>
+    <summary>Spoiler <b>(use a commercial memory size like 8, 16, or 24 GiB; vcpu example for 8 threads host CPU)</b></summary>
 
   ```shell
   <memory unit="GiB">24</memory>
-  <currentMemory unit="GiB">24</currentMemory>
-  <vcpu placement="static">24</vcpu>
+  <currentMemory unit="GiB">24</memory>
+  <vcpu placement="static">8</vcpu>
   ```
   </details>
 
 
 - Replace from `<features>` to `</clock>` and [Apply]:
   <details>
-    <summary>Spoiler (example for <b>AMD</b> 12 cores 24 threads host CPU)</summary>
+    <summary>Spoiler (example for 4 cores 8 threads host CPU)</summary>
 
   ```shell
   <features>
@@ -225,7 +247,7 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
       <synic state="off"/>
       <stimer state="off"/>
       <reset state="off"/>
-      <vendor_id state="on" value="AuthenticAMD"/>
+      <vendor_id state="off"/>
       <frequencies state="off"/>
       <reenlightenment state="off"/>
       <tlbflush state="off"/>
@@ -243,12 +265,10 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
     <msrs unknown="fault"/>
   </features>
   <cpu mode="host-passthrough" check="none" migratable="off">
-    <topology sockets="1" cores="12" threads="2"/>
-    <cache mode="passthrough"/>
-    <feature policy="disable" name="aes"/>
+    <topology sockets="1" cores="4" threads="2"/>
     <feature policy="disable" name="hypervisor"/>
     <feature policy="require" name="svm"/>
-    <feature policy="disable" name="vmx"/>
+    <feature policy="require" name="vmx"/>
     <feature policy="disable" name="x2apic"/>
     <feature policy="require" name="topoext"/>
     <feature policy="require" name="invtsc"/>
@@ -268,68 +288,6 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
   </clock>
   ```
   </details>
-
-
-  <details>
-    <summary>Spoiler (example for <b>Intel</b> 4 cores 4 threads host CPU)</summary>
-
-  ```shell
-  <features>
-    <acpi/>
-    <apic/>
-    <hyperv mode="custom">
-      <relaxed state="off"/>
-      <vapic state="off"/>
-      <spinlocks state="off"/>
-      <vpindex state="off"/>
-      <runtime state="off"/>
-      <synic state="off"/>
-      <stimer state="off"/>
-      <reset state="off"/>
-      <vendor_id state="on" value="GenuineIntel"/>
-      <frequencies state="off"/>
-      <reenlightenment state="off"/>
-      <tlbflush state="off"/>
-      <ipi state="off"/>
-      <evmcs state="off"/>
-      <avic state="off"/>
-    </hyperv>
-    <kvm>
-      <hidden state="on"/>
-    </kvm>
-    <pmu state="on"/>
-    <vmport state="off"/>
-    <smm state="on"/>
-    <ioapic driver="kvm"/>
-    <msrs unknown="fault"/>
-  </features>
-  <cpu mode="host-passthrough" check="none" migratable="off">
-    <topology sockets="1" cores="4" threads="1"/>
-    <cache mode="passthrough"/>
-    <feature policy="require" name="aes"/>
-    <feature policy="disable" name="hypervisor"/>
-    <feature policy="disable" name="svm"/>
-    <feature policy="require" name="vmx"/>
-    <feature policy="disable" name="x2apic"/>
-    <feature policy="disable" name="topoext"/>
-    <feature policy="require" name="invtsc"/>
-    <feature policy="disable" name="amd-ssbd"/>
-    <feature policy="disable" name="ssbd"/>
-    <feature policy="disable" name="virt-ssbd"/>
-    <feature policy="disable" name="rdpid"/>
-    <feature policy="disable" name="rdtscp"/>
-  </cpu>
-  <clock offset="localtime">
-    <timer name="tsc" present="yes" tickpolicy="discard" mode="native"/>
-    <timer name="hpet" present="yes"/>
-    <timer name="rtc" present="no"/>
-    <timer name="pit" present="no"/>
-    <timer name="kvmclock" present="no"/>
-    <timer name="hypervclock" present="no"/>
-  </clock>
-  ```
-  </details>
-
 
 - Replace from `<memballoon model="virtio">` to `</memballoon>` and [Apply]:
   <details>
@@ -470,7 +428,7 @@ sudo usermod -aG input $USER
   sudo systemctl disable apparmor
   ```
 
-### 11. Spoof QEMU (Mandatory)
+### 11. Spoof qemu-system-x86_64 (Mandatory)
 
 - This script is based on: [Scrut1ny/Hypervisor-Phantom](https://github.com/Scrut1ny/Hypervisor-Phantom)
 
@@ -493,7 +451,6 @@ sudo usermod -aG input $USER
   </details>
 
 - Run `qemupatch.sh` to clone, patch, and build `qemu-system-x86_64` with generated data.
-  - You can edit `default_models` with real data.
 
 - Virtual Machine Manager >> [Open] >> View >> Details >> Overview >> XML
 
@@ -571,11 +528,20 @@ sudo usermod -aG input $USER
   ```
   </details>
 
-### 13. Configure Nika
+## 13 Spoof GPU (tested from 51x to 57x)
+
+- Disable ROM BAR for each PCI Host Device:
+ - Virtual Machine Mangaer >> [Open] >> View >> Details >> PCI 000:xx:xx.x >> ROM BAR: [ ] >> [Apply]
+
+- Check old UUID with `nvidia-smi -L`
+- Run the cheat BEFORE the game at least once.
+   Check new UUID with `nvidia-smi -L`
+
+### 14. Configure Nika
 
 1. Edit `Nika.ini` and set `START_OVERLAY = NO`.
 
-### 14. Usage
+### 15. Usage
 
 - For **window settings**, open; System Settings >> Window Management >> Window Rules >> Import... >> GLFW.kwinrule
   - Also check; System Settings >> Display & Monitor >> Scale: 100%
@@ -590,11 +556,11 @@ sudo usermod -aG input $USER
 | Capture card                 | 30-300 ms | Overlay+Glow | Investment for faster device |
 | Steam Remote Play            | 10 ms     | Overlay+Glow | Encoded video                |
 
-### 5.1 Cable
+### 15.1 Cable
 
 - Plug monitor into passthrough GPU.
 
-### 5.2 Capture card
+### 15.2 Capture card
 
 
   <details>
@@ -610,7 +576,7 @@ sudo usermod -aG input $USER
 gst-launch-1.0 -v v4l2src device=/dev/video0 ! video/x-raw,width=1920,height=1080,framerate=60/1 ! videoconvert ! autovideosink
 ```
 
-### 5.3 Steam Remote Play (if you can't connect)
+### 15.3 Steam Remote Play (if you can't connect)
 
 - Virtual Machine Manager >> [Open] >> View >> Details >> NIC xx:xx:xx >> Network source: Bridge device... >> Device name: br0 >> [Apply]
 
@@ -643,4 +609,4 @@ sudo iptables --insert FORWARD --in-interface br0 -j ACCEPT
 ## Troubleshooting
 
 - If KVM is not detected, add `ibt=off` (or `no_cet`) to GRUB: `sudo vi /etc/default/grub`, then `sudo grub2-mkconfig -o /etc/grub2.cfg`.
-
+- I don't believe ```15. Usage``` working without the overlay being enabled.
