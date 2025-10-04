@@ -62,10 +62,7 @@ REMINDER: This is a new version of the guide and may have issues, you may follow
 This guide was tested on Fedora 41 KDE but should work on other Linux distributions with equivalent commands. For distro-specific issues, consult documentation or use tools like ChatGPT to adapt commands.
 
 - **Download Fedora 41 KDE or Fedora 42 KDE**: [Fedora KDE 41](https://fedora.mirrorservice.org/fedora/linux/releases/41/Spins/x86_64/iso/Fedora-KDE-Live-x86_64-41-1.4.iso) or [Fedora KDE 42](https://download.fedoraproject.org/pub/fedora/linux/releases/42/KDE/x86_64/iso/Fedora-KDE-Desktop-Live-42-1.1.x86_64.iso)
-- Ensure your system has a password set for use with PuTTY.
-- Update your OS: `sudo dnf update` and reboot.
-- Install NVIDIA drivers (I am usnure about AMD GPUs): `sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda`
-- Install virtualization tools: `sudo dnf group install --with-optional virtualization`
+- Ensure your system has a password set for use with PuTTY later on.
 
 ## Setup Instructions
 
@@ -75,6 +72,12 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
    - **Intel**: VT-d (VMX) and IOMMU
    - **AMD**: AMD-Vi (SVM) and IOMMU
 2. Disable "Above 4G Decoding".
+
+2.1
+
+- Update your OS: `sudo dnf update` and reboot.
+- Install NVIDIA drivers (I am usnure about AMD GPUs command): `sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda`
+- Install virtualization tools: `sudo dnf group install --with-optional virtualization`
 
 3. (3 and 3.1 are just for testing for the sgpu, you may attempt this step or skip over it)
 
