@@ -1,5 +1,7 @@
 # This is a new format version, due to my other guide just being sloppy. The guide may have issues, but I have checked over it a few times, and it seemed fine. Additional note: The QEMU/KVM spoofing is causing issues for SGPU, so whenever the detection is fixed or when people no longer have issues with Nika, I'll work towards the fix.
 
+# Right now as of 10/3/25 I will start working on the fix.
+
 # Nika Read Only: Apex Legends External Cheat for Linux
 
 This guide provides step-by-step instructions for setting up an external cheat for Apex Legends on a Linux system using QEMU/KVM. It is designed for Season 23 and supports an i5-6600K 4c/4t Linux PC. The guide assumes familiarity with Linux and virtualization concepts.
