@@ -615,3 +615,11 @@ sudo iptables --insert FORWARD --in-interface br0 -j ACCEPT
 
 - If KVM is not detected, add `ibt=off` (or `no_cet`) to GRUB: `sudo vi /etc/default/grub`, then `sudo grub2-mkconfig -o /etc/grub2.cfg`.
 - I don't believe ```15. Usage``` working without the overlay being enabled.
+
+- Logs for troubleshooting
+```
+win10.log        => /var/log/libvirt/qemu
+custom_hooks.log => /var/log/libvirt/
+libvirtd.log     => /var/log/libvirt/
+```
+
