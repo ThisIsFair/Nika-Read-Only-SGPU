@@ -433,7 +433,7 @@ sudo usermod -aG input $USER
   sudo systemctl disable apparmor
   ```
 
-### 11. Spoof qemu-system-x86_64 (Mandatory)
+### 11. Spoof qemu (Mandatory)
 
 - This script is based on: [Scrut1ny/Hypervisor-Phantom](https://github.com/Scrut1ny/Hypervisor-Phantom)
 
@@ -455,7 +455,7 @@ sudo usermod -aG input $USER
   ```
   </details>
 
-- Run `qemupatch.sh` to clone, patch, and build `qemu-system-x86_64` with generated data.
+- Run `qemupatch.sh` to clone, patch, and build `qemu` with generated data.
 
 - Virtual Machine Manager >> [Open] >> View >> Details >> Overview >> XML
 
@@ -533,7 +533,23 @@ sudo usermod -aG input $USER
   ```
   </details>
 
-## 13 Spoof GPU (tested from 51x to 57x)
+## 13 Spoof CPU (AMD host mandatory)
+
+- This step and below requires windows with passthrough gpu drivers installed.
+
+- Virtual Machine Manager >> [Open] >> View >> Details >> CPUs >> Model:
+
+  - Choose one from: ```Nahalem```, ```Westmere```, ```SandyBridge```, ```IvyBridge```. 
+    - CPU model for each architecture was randomly set at ```qemupatch.sh``` runtime.
+    
+  - Set cores and threads to match guest CPU
+    - If guest CPU has 8 threads, use 4 cores 2 threads.
+    
+  - Finally [Apply]
+  
+ - Reverting to ```host-passthrough``` will clear most XML setting from ```<features>``` to ```</clock>``` previously set for CPU 
+
+## 14 Spoof GPU (tested from 51x to 57x)
 
 - Disable ROM BAR for each PCI Host Device:
  - Virtual Machine Mangaer >> [Open] >> View >> Details >> PCI 000:xx:xx.x >> ROM BAR: [ ] >> [Apply]
@@ -542,11 +558,11 @@ sudo usermod -aG input $USER
 - Run the cheat BEFORE the game at least once.
    Check new UUID with `nvidia-smi -L`
 
-### 14. Configure Nika
+### 15. Configure Nika
 
 1. Edit `Nika.ini` and set `START_OVERLAY = NO`.
 
-### 15. Usage
+### 16. Usage
 
 - For **window settings**, open; System Settings >> Window Management >> Window Rules >> Import... >> GLFW.kwinrule
   - Also check; System Settings >> Display & Monitor >> Scale: 100%
@@ -561,11 +577,11 @@ sudo usermod -aG input $USER
 | Capture card                 | 30-300 ms | Overlay+Glow | Investment for faster device |
 | Steam Remote Play            | 10 ms     | Overlay+Glow | Encoded video                |
 
-### 15.1 Cable
+### 16.1 Cable
 
 - Plug monitor into passthrough GPU.
 
-### 15.2 Capture card
+### 16.2 Capture card
 
 
   <details>
@@ -581,7 +597,7 @@ sudo usermod -aG input $USER
 gst-launch-1.0 -v v4l2src device=/dev/video0 ! video/x-raw,width=1920,height=1080,framerate=60/1 ! videoconvert ! autovideosink
 ```
 
-### 15.3 Steam Remote Play (if you can't connect)
+### 16.3 Steam Remote Play (if you can't connect)
 
 - Virtual Machine Manager >> [Open] >> View >> Details >> NIC xx:xx:xx >> Network source: Bridge device... >> Device name: br0 >> [Apply]
 
