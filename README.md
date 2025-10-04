@@ -73,8 +73,8 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
    - **AMD**: AMD-Vi (SVM) and IOMMU
 2. Disable "Above 4G Decoding".
 
-2.1
 
+2.1.
 - Update your OS: `sudo dnf update` and reboot.
 - Install NVIDIA drivers (I am usnure about AMD GPUs command): `sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda`
 - Install virtualization tools: `sudo dnf group install --with-optional virtualization`
