@@ -1,6 +1,6 @@
 # This is a new format version, due to my other guide just being sloppy. The guide may have issues, but I have checked over it a few times, and it seemed fine. Additional note: The QEMU/KVM spoofing is causing issues for SGPU, so whenever the detection is fixed or when people no longer have issues with Nika, I'll work towards the fix.
 
-# Right now as of 10/3/25 I will start working on the fix.
+# Right now as of 10/3/25 I will start working on the fix. | Update: (10/4/25) I've managed to get past all the spoofing problems, only issue I am now having is the vm launching with no display, but I do have a few things I believe it may be.
 
 # Nika Read Only: Apex Legends External Cheat for Linux
 
