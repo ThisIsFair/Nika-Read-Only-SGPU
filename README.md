@@ -1,6 +1,8 @@
-# This is a new format version, due to my other guide just being sloppy. The guide may have issues, but I have checked over it a few times, and it seemed fine. Additional note: The QEMU/KVM spoofing is causing issues for SGPU, so whenever the detection is fixed or when people no longer have issues with Nika, I'll work towards the fix.
+# This is a new format version, due to my other guide just being sloppy. The guide may have issues, but I have checked over it a few times, and it seemed fine.
 
-# Right now as of 10/3/25 I will start working on the fix. | Update: (10/4/25) I've managed to get past all the spoofing problems, only issue I am now having is the vm launching with no display, but I do have a few things I believe it may be.
+# The guide does seem to be working for fedora 42 kde, unsure about 41 kde as I only tested 42, also if you get a black screen remove your keyboard and mouse from the vm xml, it seems to be creating an issue of some sort.
+
+~~# Right now as of 10/3/25 I will start working on the fix. | Update: (10/4/25) I've managed to get past all the spoofing problems, only issue I am now having is the vm launching with no display, but I do have a few things I believe it may be.~~
 
 # Nika Read Only: Apex Legends External Cheat for Linux
 
@@ -71,36 +73,12 @@ This guide was tested on Fedora 41 KDE but should work on other Linux distributi
 1. Enter your BIOS and enable:
    - **Intel**: VT-d (VMX) and IOMMU
    - **AMD**: AMD-Vi (SVM) and IOMMU
-2. Disable "Above 4G Decoding".
+1.1. Disable "Above 4G Decoding".
 
-
-2.1.
-- Update your OS: `sudo dnf update` and reboot.
-- Install NVIDIA drivers (I am usnure about AMD GPUs command): `sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda`
+1.2 Once fully loaded into the vm:
+- Update your OS: `sudo dnf update` and reboot. -- optional step
+- Install NVIDIA drivers (I am usnure about AMD GPUs command): `sudo dnf install akmod-nvidia xorg-x11-drv-nvidia-cuda` -- optional step
 - Install virtualization tools: `sudo dnf group install --with-optional virtualization`
-
-3. (3 and 3.1 are just for testing for the sgpu, you may attempt this step or skip over it)
-
-- Nested Virtualization for Intel:
-```shell
-sudo su
-echo "options kvm_intel nested=0" > /etc/modprobe.d/kvm.conf
-```
-
-- Nested Virtualization for AMD:
-```shell
-sudo su
-echo "options kvm_amd nested=0" > /etc/modprobe.d/kvm.conf
-```
-
-3.1
-
-- Preload `vfio-pci` module so it can bind to PCI IDs:
-```shell
-sudo su
-echo "softdep nvidia pre: vfio-pci" >> /etc/modprobe.d/kvm.conf
-echo "softdep nouveau pre: vfio-pci" >> /etc/modprobe.d/kvm.conf
-```
 
 ### 2. Configure Bootloader
 
