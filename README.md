@@ -1,4 +1,4 @@
-# Is the guide still working fine? Please lmk via issues tab, and I will try resolving the issues. I will start working on some adjustments and get most of the steps up to date but they will be experimental as I have no way to test them.
+# Is the guide still working fine? Please lmk via issues tab, and I will try resolving the issues. The new steps are added in the [EXPERIMENTAL GUIDE](https://github.com/ThisIsFair/Nika-Read-Only-SGPU-tests/blob/main/EXPERIMENTAL%20GUIDE.md)
 
 # The guide does seem to be working for fedora 42 kde, unsure about 41 kde as I only tested 42, also if you get a black screen remove your keyboard and mouse from the vm xml, it seems to be creating an issue of some sort.
 
