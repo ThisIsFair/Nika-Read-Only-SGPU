@@ -1,4 +1,4 @@
-# This is a new format version, due to my other guide just being sloppy. The guide may have issues, but I have checked over it a few times, and it seemed fine.
+# Is the guide still working fine? Please lmk via issues tab, and I will try resolving the issues. I will start working on some adjustments and get most of the steps up to date but they will be experimental as I have no way to test them.
 
 # The guide does seem to be working for fedora 42 kde, unsure about 41 kde as I only tested 42, also if you get a black screen remove your keyboard and mouse from the vm xml, it seems to be creating an issue of some sort.
 
